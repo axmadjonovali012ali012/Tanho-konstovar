@@ -4,15 +4,33 @@ import { useCart } from '../contexts/CartContext';
 import { LanguageContext } from '../App';
 
 const Header = ({ currentPage, onNavigate, onLogout }) => {
-  const { cartItems } = useCart(); 
+  const { cartItems } = useCart();
   const { language, setLanguage } = useContext(LanguageContext);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const cartItemsCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   const translations = {
-    uz: { home: "Bosh sahifa", books: "Kitoblar", supplies: "O'quv qurollari", contact: "Aloqa", logout: "Chiqish"  },
-    ru: { home: "Главная", books: "Книги", supplies: "Учебные принадлежности", contact: "Контакты", logout: "Выйти" }
+    uz: {
+      home: "Bosh sahifa",
+      books: "Kitoblar",
+      supplies: "O'quv qurollari",
+      accessories: "Aksessuarlar",
+      news: "Yangiliklar",
+      discounts: "Chegirmalar",
+      contact: "Aloqa",
+      logout: "Chiqish"
+    },
+    ru: {
+      home: "Главная",
+      books: "Книги",
+      supplies: "Учебные принадлежности",
+      accessories: "Аксессуары",
+      news: "Новости",
+      discounts: "Скидки",
+      contact: "Контакты",
+      logout: "Выйти"
+    }
   };
   const t = translations[language];
 
@@ -20,6 +38,9 @@ const Header = ({ currentPage, onNavigate, onLogout }) => {
     { key: "home", label: t.home },
     { key: "books", label: t.books },
     { key: "supplies", label: t.supplies },
+    { key: "accessories", label: t.accessories },
+    { key: "news", label: t.news },
+    { key: "discounts", label: t.discounts },
     { key: "contact", label: t.contact },
   ];
 
@@ -39,8 +60,8 @@ const Header = ({ currentPage, onNavigate, onLogout }) => {
               key={item.key}
               onClick={() => onNavigate(item.key)}
               className={`font-medium relative ${currentPage === item.key
-                  ? "text-green-600"
-                  : "text-gray-700 hover:text-green-600"
+                ? "text-green-600"
+                : "text-gray-700 hover:text-green-600"
                 }`}
             >
               {item.label}

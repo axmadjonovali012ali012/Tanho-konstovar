@@ -11,6 +11,9 @@ import NewProductsPage from './pages/NewProductsPage';
 import DiscountsPage from './pages/DiscountsPage';
 import ContactPage from './pages/ContactPage';
 import CartPage from './pages/CartPage';
+import NewsPage from './pages/NewsPage';
+import SalesPage from './pages/SalesPage';
+import AccessoriesPage from './pages/AccessoriesPage';
 
 export const LanguageContext = React.createContext();
 
@@ -62,7 +65,11 @@ function App() {
                     {currentPage === 'new' && <NewProductsPage />}
                     {currentPage === 'discounts' && <DiscountsPage />}
                     {currentPage === 'contact' && <ContactPage />}
-                    {currentPage === 'cart' && <CartPage />} 
+                    {currentPage === 'cart' && <CartPage />}
+                    {currentPage === "news" && <NewsPage />}
+                    {currentPage === "discounts" && <SalesPage />}
+                    {currentPage === "accessories" && <AccessoriesPage />}
+
 
                     <ToastContainer position="top-center" autoClose={3000} />
                 </div>

@@ -19,13 +19,42 @@ const CartPage = () => {
     );
   }
 
-  const handleOrder = () => {
-    toast.success(" Zakazingiz qabul qilindi!", {
-      position: "top-center",
-      autoClose: 3000,
-      theme: "colored",
-    });
-    clearCart(); 
+  const handleOrder = async () => {
+    const token = "437520337:AAEKtO4dcQFshAxA0d3FqomFdichJazHWug";
+    const chatId = "7418431538";
+
+    const itemsText = cartItems
+      .map(
+        (item) =>
+          `🛍 ${item.name} x ${item.quantity} = ${item.price * item.quantity} so’m`
+      )
+      .join("\n");
+
+    const text = `📩 Yangi zakaz!\n\n${itemsText}\n\nUmumiy: ${totalPrice} so’m\n📅 Sana: ${new Date().toLocaleString()}`;
+
+    try {
+      const res = await fetch(
+        `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(
+          text
+        )}`,
+        { method: "GET" }
+      );
+      const data = await res.json();
+
+      if (data.ok) {
+        toast.success("Zakazingiz qabul qilindi!", {
+          position: "top-center",
+          autoClose: 3000,
+          theme: "colored",
+        });
+        clearCart(); // Savatchani tozalash
+      } else {
+        toast.error("Xabar yuborilmadi, keyinroq urinib ko‘ring.");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Xatolik yuz berdi!");
+    }
   };
 
   return (
@@ -57,9 +86,7 @@ const CartPage = () => {
               >
                 <Minus className="w-4 h-4" />
               </button>
-              <span className="px-3 py-1 border rounded-md">
-                {item.quantity}
-              </span>
+              <span className="px-3 py-1 border rounded-md">{item.quantity}</span>
               <button
                 onClick={() => updateQuantity(item.id, item.quantity + 1)}
                 className="p-2 rounded-full bg-gray-200 hover:bg-gray-300"

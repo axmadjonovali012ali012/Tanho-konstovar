@@ -106,3 +106,10 @@ export const getBooks = () => ALL.filter(p => p.type === "book");
 export const getSupplies = () => ALL.filter(p => p.type === "supply");
 export const getNewProducts = () => ALL.filter(p => p.isNew);
 export const getDiscountProducts = () => ALL.filter(p => p.discount && p.discount > 0);
+export function getAccessories() {
+  return [
+    { id: 201, name: "Telefon Chexol", nameRu: "Чехол для телефона", price: 30000, image: "/images/chehol.jpg" },
+    { id: 202, name: "Zaryadnik", nameRu: "Зарядка", price: 50000, image: "/images/zaryadnik.jpg" },
+    { id: 203, name: "Naushnik", nameRu: "Наушники", price: 70000, image: "/images/naushnik.jpg" },
+  ];
+}
