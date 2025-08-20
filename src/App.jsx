@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { CartProvider } from './contexts/CartContext';
@@ -40,6 +40,26 @@ function App() {
         );
     };
 
+    // Telegram botga zakaz yuborish funksiyasi
+    const sendOrder = async (orderData) => {
+        try {
+            const response = await fetch("http://localhost:5000/send-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(orderData),
+            });
+            const data = await response.json();
+            if (data.ok) {
+                toast.success(language === 'uz' ? "Zakaz yuborildi!" : "Заказ отправлен!");
+            } else {
+                throw new Error("Xatolik yuz berdi");
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error(language === 'uz' ? "Xabar yuborilmadi, keyinroq urinib ko‘ring." : "Сообщение не отправлено, попробуйте позже.");
+        }
+    };
+
     if (!isLoggedIn) {
         return (
             <LanguageContext.Provider value={{ language, setLanguage }}>
@@ -65,11 +85,10 @@ function App() {
                     {currentPage === 'new' && <NewProductsPage />}
                     {currentPage === 'discounts' && <DiscountsPage />}
                     {currentPage === 'contact' && <ContactPage />}
-                    {currentPage === 'cart' && <CartPage />}
+                    {currentPage === 'cart' && <CartPage sendOrder={sendOrder} />}
                     {currentPage === "news" && <NewsPage />}
-                    {currentPage === "discounts" && <SalesPage />}
+                    {currentPage === "sales" && <SalesPage />}
                     {currentPage === "accessories" && <AccessoriesPage />}
-
 
                     <ToastContainer position="top-center" autoClose={3000} />
                 </div>
@@ -79,3 +98,7 @@ function App() {
 }
 
 export default App;
+
+
+
+//node server/index.js 

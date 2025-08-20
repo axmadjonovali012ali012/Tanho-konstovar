@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "start": "node server.js"
   },
   "dependencies": {
     "body-parser": "^2.2.0",
@@ -33,5 +34,18 @@
     "tailwindcss": "^3.4.1",
     "typescript-eslint": "^8.3.0",
     "vite": "^5.4.2"
-  }
+  },
+  "description": "\"# Tanho-konstovar\"",
+  "main": "eslint.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/axmadjonovali012ali012/Tanho-konstovar.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/axmadjonovali012ali012/Tanho-konstovar/issues"
+  },
+  "homepage": "https://github.com/axmadjonovali012ali012/Tanho-konstovar#readme"
 }

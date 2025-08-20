@@ -1,121 +1,140 @@
-import React from "react";
+import React, { useState, useContext } from "react";
 import { useCart } from "../contexts/CartContext";
-import { Trash2, Plus, Minus } from "lucide-react";
+import { Minus, Plus, Trash2, CheckCircle } from "lucide-react";
 import { toast } from "react-toastify";
+import { LanguageContext } from "../App";
 
-const CartPage = () => {
-  const { cartItems, removeFromCart, updateQuantity, clearCart } = useCart();
+function CartPage({ sendOrder }) {
+  const {
+    cartItems,
+    removeFromCart,
+    increaseQuantity,
+    decreaseQuantity,
+    getCartTotal,
+    clearCart, // 🔹 qo‘shildi
+  } = useCart();
 
-  const totalPrice = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
+  const { language } = useContext(LanguageContext);
 
-  if (cartItems.length === 0) {
-    return (
-      <div className="p-10 text-center text-gray-600 text-lg">
-        Savatcha bo'sh 😔
-      </div>
-    );
-  }
+  const [fullName, setFullName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [address, setAddress] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleOrder = async () => {
-    const token = "437520337:AAEKtO4dcQFshAxA0d3FqomFdichJazHWug";
-    const chatId = "7418431538";
+  const handleCheckout = async () => {
+    if (!fullName || !phoneNumber || !address) {
+      toast.error(language === "uz" ? "Iltimos, barcha maydonlarni to‘ldiring!" : "Пожалуйста, заполните все поля!");
+      return;
+    }
 
-    const itemsText = cartItems
-      .map(
-        (item) =>
-          `🛍 ${item.name} x ${item.quantity} = ${item.price * item.quantity} so’m`
-      )
-      .join("\n");
-
-    const text = `📩 Yangi zakaz!\n\n${itemsText}\n\nUmumiy: ${totalPrice} so’m\n📅 Sana: ${new Date().toLocaleString()}`;
-
+    setIsLoading(true);
     try {
-      const res = await fetch(
-        `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(
-          text
-        )}`,
-        { method: "GET" }
-      );
-      const data = await res.json();
+      await sendOrder({
+        fullName,
+        phoneNumber,
+        address,
+        cartItems,
+        total: getCartTotal(),
+      });
 
-      if (data.ok) {
-        toast.success("Zakazingiz qabul qilindi!", {
-          position: "top-center",
-          autoClose: 3000,
-          theme: "colored",
-        });
-        clearCart(); // Savatchani tozalash
-      } else {
-        toast.error("Xabar yuborilmadi, keyinroq urinib ko‘ring.");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Xatolik yuz berdi!");
+      toast.success(
+        language === "uz"
+          ? "✅ Buyurtmangiz qabul qilindi! 2-4 soatda aloqaga chiqamiz."
+          : "✅ Ваш заказ принят! Мы свяжемся с вами в течение 2-4 часов.",
+        { autoClose: 10000 }
+      );
+
+      // 🔹 Inputlarni tozalash
+      setFullName("");
+      setPhoneNumber("");
+      setAddress("");
+
+      // 🔹 Savatchani bo‘shatish
+      clearCart();
+    } catch {
+      toast.error(language === "uz" ? "❌ Xatolik: buyurtma yuborilmadi" : "❌ Ошибка: заказ не был отправлен");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="mx-auto p-6 w-full">
-      <h1 className="text-2xl font-bold mb-6">🛒 Savatcha</h1>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-        {cartItems.map((item) => (
-          <div
-            key={item.id}
-            className="flex items-center justify-between border rounded-lg p-4 bg-white shadow-md w-full"
-          >
-            <img
-              src={item.image || "https://via.placeholder.com/80"}
-              alt={item.name}
-              className="w-24 h-24 object-cover rounded-md"
-            />
-
-            <div className="flex-1 px-4">
-              <h2 className="font-semibold text-lg">{item.name}</h2>
-              <p className="text-gray-600">{item.price} so’m</p>
+    <div className="container mx-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Savatcha */}
+      <div className="bg-white rounded-xl shadow-md p-6">
+        <h2 className="text-xl font-bold mb-4">{language === "uz" ? "Savatcha" : "Корзина"}</h2>
+        {cartItems.length === 0 ? (
+          <p>{language === "uz" ? "Savatchangiz bo'sh" : "Ваша корзина пуста"}</p>
+        ) : (
+          cartItems.map((item) => (
+            <div key={item.id} className="flex justify-between items-center border-b py-3">
+              <div>
+                <h3 className="font-medium">{item.name}</h3>
+                <p>{item.price} so'm</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => decreaseQuantity(item.id)}><Minus size={18} /></button>
+                <span>{item.quantity}</span>
+                <button onClick={() => increaseQuantity(item.id)}><Plus size={18} /></button>
+                <button onClick={() => removeFromCart(item.id)}><Trash2 className="text-red-500" /></button>
+              </div>
             </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                className="p-2 rounded-full bg-gray-200 hover:bg-gray-300"
-                disabled={item.quantity <= 1}
-              >
-                <Minus className="w-4 h-4" />
-              </button>
-              <span className="px-3 py-1 border rounded-md">{item.quantity}</span>
-              <button
-                onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                className="p-2 rounded-full bg-gray-200 hover:bg-gray-300"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-
-            <button
-              onClick={() => removeFromCart(item.id)}
-              className="ml-4 p-2 bg-red-500 text-white rounded-full hover:bg-red-600"
-            >
-              <Trash2 className="w-5 h-5" />
-            </button>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
-      <div className="mt-6 flex justify-between items-center border-t pt-4 w-full">
-        <h2 className="text-xl font-bold">Umumiy: {totalPrice} so’m</h2>
+      {/* Buyurtma formasi */}
+      <div className="bg-white rounded-xl shadow-md p-6">
+        <h2 className="text-xl font-bold mb-6">
+          {language === "uz" ? "Buyurtma ma'lumotlari" : "Данные заказа"}
+        </h2>
+
+        <div className="space-y-4 mb-6">
+          <input
+            type="text"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            placeholder={language === "uz" ? "Ism Familiya" : "Имя Фамилия"}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+          />
+
+          <input
+            type="tel"
+            value={phoneNumber}
+            onChange={(e) => {
+              const cleaned = e.target.value.replace(/[^0-9+]/g, "");
+              setPhoneNumber(cleaned);
+            }}
+            placeholder="+998901234567"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+            maxLength={13}
+          />
+
+          <input
+            type="text"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder={language === "uz" ? "Manzil" : "Адрес"}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+          />
+
+          <div className="border-t pt-4 flex justify-between font-bold">
+            <span>{language === "uz" ? "Jami:" : "Итого:"}</span>
+            <span className="text-green-600">{getCartTotal()} so'm</span>
+          </div>
+        </div>
+
         <button
-          onClick={handleOrder}
-          className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700"
+          onClick={handleCheckout}
+          disabled={isLoading}
+          className={`w-full ${isLoading ? "bg-gray-400" : "bg-green-600 hover:bg-green-700"} 
+          text-white py-3 rounded-lg flex items-center justify-center gap-2`}
         >
-          Zakaz qilish
+          {isLoading ? (language === "uz" ? "Jo‘natilmoqda..." : "Отправка...") : <><CheckCircle /> {language === "uz" ? "Buyurtma berish" : "Сделать заказ"}</>}
         </button>
       </div>
     </div>
   );
-};
+}
 
 export default CartPage;
