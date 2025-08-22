@@ -1,55 +1,54 @@
+// server/index.js
 import express from "express";
+import fetch from "node-fetch";  // telegram API uchun
 import cors from "cors";
-import bodyParser from "body-parser";
-import fetch from "node-fetch";
 
 const app = express();
-const PORT = 5000;
-
-
+app.use(cors());
+app.use(express.json());
 
 const TELEGRAM_BOT_TOKEN = "8437520337:AAEKtO4dcQFshAxA0d3FqomFdichJazHWug";
-const TELEGRAM_CHAT_ID = "7418431538";
+const CHAT_ID = "7418431538";
 
-app.use(cors());
-app.use(bodyParser.json());
-
-// 🔹 Buyurtma yuborish endpoint
+// Zakaz yuborish endpointi
 app.post("/send-order", async (req, res) => {
-    try {
-        const { fullName, phoneNumber, address, cartItems, total } = req.body;
+  const order = req.body;
 
-        if (!cartItems || cartItems.length === 0) {
-            return res.status(400).json({ ok: false, error: "Savatcha bo'sh" });
-        }
+  if (!order || !order.name) {
+    return res.status(400).json({ ok: false, error: "Order ma'lumotlari to‘liq emas" });
+  }
 
-        let message = "📦 Yangi zakaz keldi!\n\n";
-        cartItems.forEach((item, index) => {
-            message += `${index + 1}) ${item.name} - ${item.quantity} dona - ${item.price * item.quantity} so'm\n`;
-        });
+  const message = `
+📦 Yangi zakaz:
+👤 Ism: ${order.name}
+📞 Telefon: ${order.phone}
+🛒 Mahsulotlar: ${JSON.stringify(order.items)}
+💰 Umumiy summa: ${order.totalPrice} so‘m
+  `;
 
-        message += `\n💰 Umumiy summa: ${total} so'm\n\n`;
-        message += `👤 F.I.SH: ${fullName}\n📞 Tel: ${phoneNumber}\n📍 Manzil: ${address}`;
+  try {
+    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: CHAT_ID,
+        text: message,
+      }),
+    });
 
-        await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                chat_id: TELEGRAM_CHAT_ID,
-                text: message,
-            }),
-        });
+    const data = await response.json();
 
-        res.json({ ok: true });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ ok: false, error: "Xatolik yuz berdi" });
+    if (data.ok) {
+      res.json({ ok: true });
+    } else {
+      res.status(500).json({ ok: false, error: "Telegram API xatosi" });
     }
+  } catch (err) {
+    console.error("Xato:", err);
+    res.status(500).json({ ok: false, error: "Server xatosi" });
+  }
 });
 
-app.listen(PORT, () => {
-    console.log(`✅ Server ${PORT} portda ishlayapti...`);
-});
-
-
-
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`✅ Server ${PORT}-portda ishlayapti`));
