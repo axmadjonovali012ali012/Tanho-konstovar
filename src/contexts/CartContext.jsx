@@ -42,7 +42,6 @@ export const CartProvider = ({ children }) => {
   const getCartTotal = () =>
     cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  // 🔹 Savatchani bo‘shatish
   const clearCart = () => setCartItems([]);
 
   return (
@@ -62,4 +61,11 @@ export const CartProvider = ({ children }) => {
   );
 };
 
-export const useCart = () => useContext(CartContext);
+
+export const useCart = () => {
+  const context = useContext(CartContext);
+  if (!context) {
+    throw new Error("useCart must be used within a CartProvider");
+  }
+  return context;
+};

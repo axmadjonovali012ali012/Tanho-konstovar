@@ -1,47 +1,55 @@
-// api/send-order.js
-import fetch from "node-fetch";
-
 export default async function handler(req, res) {
-    if (req.method !== "POST") {
-        return res.status(405).json({ ok: false, message: "Method not allowed" });
-    }
+    if (req.method === "POST") {
+        const { fullName, phoneNumber, address, cartItems, total } = req.body;
 
-    try {
-        const { name, phone, cart } = req.body;
+        // Mahsulotlarni Telegram xabariga formatlash
+        const itemsList = cartItems
+            .map(
+                (item, index) =>
+                    `${index + 1}) ${item.name} - ${item.quantity} dona - ${item.price * item.quantity} so'm`
+            )
+            .join("\n");
 
-        if (!name || !phone || !cart || cart.length === 0) {
-            return res.status(400).json({ ok: false, message: "Ma'lumot to'liq emas" });
+        const message = `
+📦 Yangi zakaz keldi!
+
+${itemsList}
+
+💰 Umumiy summa: ${total} so'm
+
+👤 F.I.SH: ${fullName}
+📞 Tel: ${phoneNumber}
+📍 Manzil: ${address}
+    `;
+
+        try {
+            const token = "SIZNING_BOT_TOKEN";
+            const chatId = "SIZNING_CHAT_ID";
+
+            const telegramResponse = await fetch(
+                `https://api.telegram.org/bot${token}/sendMessage`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text: message,
+                    }),
+                }
+            );
+
+            const result = await telegramResponse.json();
+
+            if (result.ok) {
+                res.status(200).json({ ok: true });
+            } else {
+                res.status(500).json({ ok: false, error: result });
+            }
+        } catch (error) {
+            console.error("❌ Backend xato:", error);
+            res.status(500).json({ ok: false });
         }
-
-        const BOT_TOKEN = process.env.BOT_TOKEN;
-        const CHAT_ID = process.env.CHAT_ID;
-
-        let message = `🛒 Yangi zakaz!\n\n👤 Ism: ${name}\n📞 Telefon: ${phone}\n\n📦 Buyurtma:\n`;
-        cart.forEach((item, idx) => {
-            message += `${idx + 1}. ${item.name} - ${item.price} x ${item.quantity}\n`;
-        });
-
-        // Telegramga yuborish
-        const telegramUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-        const response = await fetch(telegramUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                chat_id: CHAT_ID,
-                text: message,
-                parse_mode: "HTML",
-            }),
-        });
-
-        const data = await response.json();
-
-        if (!data.ok) {
-            throw new Error("Telegramga yuborishda xatolik");
-        }
-
-        return res.status(200).json({ ok: true, message: "Zakaz yuborildi!" });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ ok: false, message: "Server xatosi" });
+    } else {
+        res.status(405).end();
     }
 }

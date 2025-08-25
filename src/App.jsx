@@ -27,36 +27,32 @@ function App() {
         toast.success(
             language === 'uz'
                 ? `Tanho-Konstovar do'koniga xush kelibsiz, ${userData.firstName}!`
-                : `Добро пожаловать в магазин Tanho-Konstovar, ${userData.firstName}!`,
-            {
-                position: "top-center",
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                theme: "colored",
-                style: { background: '#4CAF50', color: 'white' }
-            }
+                : `Добро пожаловать в магазин Tanho-Konstovar, ${userData.firstName}!`
         );
     };
 
-    // Telegram botga zakaz yuborish funksiyasi (Vercel API orqali)
-    const sendOrder = async (orderData) => {
+    // Zakaz yuborish funksiyasi
+    const sendOrder = async ({ fullName, phoneNumber, address, cartItems, total }) => {
         try {
+            console.log("📤 Yuborilayotgan zakaz:", { fullName, phoneNumber, address, cartItems, total });
+
             const response = await fetch("/api/send-order", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(orderData),
+                body: JSON.stringify({ fullName, phoneNumber, address, cartItems, total }),
             });
+
             const data = await response.json();
+            console.log("📥 Backend javobi:", data);
+
             if (data.ok) {
-                toast.success(language === 'uz' ? "Zakaz yuborildi!" : "Заказ отправлен!");
+                toast.success("✅ Zakaz qabul qilindi! 2-3 soatda aloqaga chiqamiz 😊");
             } else {
-                throw new Error("Xatolik yuz berdi");
+                toast.error("❌ Xatolik: zakaz yuborilmadi!");
             }
         } catch (err) {
-            console.error(err);
-            toast.error(language === 'uz' ? "Xabar yuborilmadi, keyinroq urinib ko‘ring." : "Сообщение не отправлено, попробуйте позже.");
+            console.error("❌ Frontend xato:", err);
+            toast.error("Xabar yuborilmadi, keyinroq urinib ko‘ring.");
         }
     };
 
