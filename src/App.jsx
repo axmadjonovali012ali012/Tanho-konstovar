@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { CartProvider } from './contexts/CartContext';
@@ -40,10 +40,10 @@ function App() {
         );
     };
 
-    // Telegram botga zakaz yuborish funksiyasi
+    // Telegram botga zakaz yuborish funksiyasi (Vercel API orqali)
     const sendOrder = async (orderData) => {
         try {
-            const response = await fetch("http://localhost:5000/send-order", {
+            const response = await fetch("/api/send-order", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(orderData),
@@ -98,7 +98,3 @@ function App() {
 }
 
 export default App;
-
-
-
-//node server/index.js 
