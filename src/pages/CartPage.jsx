@@ -39,21 +39,18 @@ const CartPage = ({ onNavigate }) => {
 
     try {
       const total = getCartTotal();
-
-      // Telegramga yuborish uchun manzilni stringga aylantirish
       const fullAddress = `${address.city}, ${address.street}, ${address.house}`;
-
-      // Telegram uchun mahsulotlar ro'yxati
-      const itemsList = cartItems
-        .map((item, i) => `${i + 1}) ${item.name} - ${item.quantity} dona - ${formatPrice(item.price * item.quantity)}`)
-        .join("\n");
-
-      const message = `📦 Yangi zakaz keldi!\n\n${itemsList}\n\n💰 Umumiy summa: ${formatPrice(total)}\n\n👤 F.I.SH: ${fullName}\n📞 Tel: ${phoneNumber}\n📍 Manzil: ${fullAddress}`;
 
       const response = await fetch("http://localhost:5000/send-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({
+          fullName,
+          phoneNumber,
+          address: fullAddress,
+          cartItems,
+          total,
+        }),
       });
 
       if (!response.ok) throw new Error("Serverdan javob kelmadi");
@@ -79,6 +76,7 @@ const CartPage = ({ onNavigate }) => {
       setIsLoading(false);
     }
   };
+
 
   if (cartItems.length === 0) {
     return (
